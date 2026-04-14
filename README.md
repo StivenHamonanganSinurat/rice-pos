@@ -94,7 +94,7 @@ Proyek ini dikonfigurasi secara cerdas untuk mendeteksi lingkungan jalannya apli
 
 ## 👨‍💻 Author
 **[Nama Lengkap Anda]**
-*   LinkedIn: [Link Anda]
+*   [LinkedIn](https://www.linkedin.com/in/stiven-hamonangan-sinurat/) 
 *   Portfolio: [Link Portfolio]
 
 ---
