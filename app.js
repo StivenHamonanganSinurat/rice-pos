@@ -117,6 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Map Role Label
             let roleLabel = "Staff (" + (currentUser.role || "No Role") + ")";
             if(role === 'superadmin') roleLabel = "Super Admin";
+            else if(role === 'demo') roleLabel = "Demo (View Only)";
             else if(role === 'kasir') roleLabel = "Kasir";
             else if(role === 'gudang') roleLabel = "Bagian Gudang";
             
@@ -131,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btn.style.display = "none";
 
                 // Pengecekan per role
-                if (role === 'superadmin' || role.includes('admin')) {
+                if (role === 'superadmin' || role === 'demo' || role.includes('admin')) {
                     btn.style.display = "block";
                 } else if (role === 'gudang' || role.includes('gudang')) {
                     // Gudang TIDAK BOLEH lihat Dasbor
@@ -164,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Global accessibility (Edit/Delete Buttons in Stock)
             const adminOnlyEls = document.querySelectorAll('.admin-only');
             adminOnlyEls.forEach(el => {
-                if(role === 'superadmin' || role.includes('gudang')) el.classList.remove('hidden-for-kasir');
+                if(role === 'superadmin' || role === 'demo' || role.includes('gudang')) el.classList.remove('hidden-for-kasir');
                 else el.classList.add('hidden-for-kasir');
             });
 
@@ -300,17 +301,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     let bLab = rawRole.toUpperCase();
                     
                     if(rawRole === 'superadmin') bCol = 'var(--accent)';
+                    else if(rawRole === 'demo') bCol = '#06b6d4'; // Cyan 500
                     else if(rawRole === 'gudang') bCol = '#f59e0b'; // Amber 500
+
+                    // Demo role: hanya lihat, tidak bisa edit/hapus staff
+                    const isDemo = (currentUser.role || '').toLowerCase() === 'demo';
                     
                     tr.innerHTML = `
                         <td style="padding-left: 20px;">${u.id}</td>
                         <td><strong>${u.username}</strong></td>
                         <td><span class="role-badge" style="background:${bCol}">${bLab}</span></td>
                         <td style="text-align: right; padding-right: 20px;">
-                            <div style="display:flex; gap:8px; justify-content: flex-end;">
+                            ${isDemo ? '<span style="color:var(--text-muted); font-size:0.8em;">🔒 View Only</span>' : `<div style="display:flex; gap:8px; justify-content: flex-end;">
                                 <button class="btn-primary" style="padding: 6px 15px; font-size: 0.85em; border-radius: 8px; background:rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);" onclick="editUser(${u.id})">Edit</button>
                                 ${currentUser.id != u.id ? `<button class="btn-danger" style="padding: 6px 15px; font-size: 0.85em; border-radius: 8px;" onclick="deleteUser(${u.id})">Hapus</button>` : ''}
-                            </div>
+                            </div>`}
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -334,6 +339,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if(document.getElementById("btn-add-staff")) {
+        const isDemoRole = (currentUser.role || '').toLowerCase() === 'demo';
+        if(isDemoRole) {
+            document.getElementById("btn-add-staff").style.display = "none";
+        }
         document.getElementById("btn-add-staff").addEventListener("click", () => openStaffModal());
     }
 
