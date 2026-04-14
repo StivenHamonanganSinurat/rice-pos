@@ -457,20 +457,28 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. DASHBOARD LOGIC
     function loadDashboard(transactions, stockMasuk = [], debtPayments = []) {
         currentTransactions = transactions; // Sync
-        let totalOmzet = 0;      // Semua Nota (Lunas + Hutang)
+        let totalOmzet = 0;      // Semua Nota (Net Penjualan setelah diskon)
         let totalCashIn = 0;     // Uang Masuk (Lunas + Bayar Hutang)
         let totalNewDebt = 0;    // Nilai Hutang Baru
-        let totalExpense = 0;    // Modal (Stok Masuk)
+        let totalExpense = 0;    // Pembelian Stok Baru
+        let totalDiscount = 0;   // Total Potongan Harga
+        let totalNetProfit = 0;  // Laba bersih asli (dari kolom laba per nota)
+        
         let totalStockIn = 0;
         let totalStockOut = 0;
         let totalStockRem = 0;
 
-        // 1. Hitung Penjualan & Hutang Baru
+        // 1. Hitung Penjualan, Hutang Baru, Diskon & Laba
         transactions.forEach(tx => {
             const price = parseFloat(tx.total_price) || 0;
             const kgOut = parseFloat(tx.total_kg_keluar || tx.qty) || 0;
+            const disc = parseFloat(tx.discount_amount) || 0;
+            const lb = parseFloat(tx.laba) || 0;
+
             totalOmzet += price;
             totalStockOut += kgOut;
+            totalDiscount += disc;
+            totalNetProfit += lb;
 
             if (tx.payment_type === 'lunas') {
                 totalCashIn += price;
@@ -484,7 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
             totalCashIn += parseFloat(dp.amount) || 0;
         });
 
-        // 3. Hitung Modal (Stock Masuk)
+        // 3. Hitung Modal Pembelian (Stock Masuk)
         stockMasuk.forEach(sm => {
             totalExpense += parseFloat(sm.total_biaya || 0);
             totalStockIn += parseFloat(sm.total_kg || 0);
@@ -500,8 +508,6 @@ document.addEventListener("DOMContentLoaded", () => {
             totalStockRem += parseFloat(p.stok_kg);
         });
 
-        const profit = totalOmzet - totalExpense;
-
         // Update UI Cards
         if(document.getElementById("stat-revenue")) {
             document.getElementById("stat-revenue").innerText = formatRp(totalOmzet);
@@ -511,7 +517,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("stat-total-debt-active").innerText = formatRp(totalDebtOutstanding);
             }
             document.getElementById("stat-expense").innerText = formatRp(totalExpense);
-            document.getElementById("stat-profit").innerText = formatRp(profit);
+            document.getElementById("stat-discount").innerText = formatRp(totalDiscount);
+            document.getElementById("stat-profit").innerText = formatRp(totalNetProfit);
             
             document.getElementById("stat-stock-in").innerText = totalStockIn.toLocaleString('id-ID') + " Kg";
             document.getElementById("stat-stock-out").innerText = totalStockOut.toLocaleString('id-ID') + " Kg";
@@ -1117,11 +1124,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const totalDiscPct = autoDiscPct + manualDiscPct;
             const discMultiplier = 1 - (totalDiscPct / 100);
 
-            // Terapkan diskon ke subtotal setiap item
-            const discountedItems = cart.map(item => ({
-                ...item,
-                subtotal: Math.round(item.subtotal * discMultiplier)
-            }));
+            // Terapkan diskon ke subtotal setiap item & hitung nominal diskonnya
+            const discountedItems = cart.map(item => {
+                const originalSubtotal = item.price * item.qty;
+                const finalSubtotal = Math.round(originalSubtotal * discMultiplier);
+                const discountAmount = originalSubtotal - finalSubtotal;
+                return {
+                    ...item,
+                    subtotal: finalSubtotal,
+                    discount_amount: discountAmount
+                };
+            });
 
             fetch(API_URL + 'transaction_bulk_process', {
                 method: 'POST',

@@ -35,6 +35,7 @@ try {
     addColumn($pdo, 'transactions', 'variant_id', 'INT DEFAULT NULL');
     addColumn($pdo, 'transactions', 'modal_per_item', 'DECIMAL(15,2) DEFAULT 0');
     addColumn($pdo, 'transactions', 'laba', 'DECIMAL(15,2) DEFAULT 0');
+    addColumn($pdo, 'transactions', 'discount_amount', 'DECIMAL(15,2) DEFAULT 0');
 
     // 5. Buat tabel product_history jika belum ada
     $pdo->exec("CREATE TABLE IF NOT EXISTS product_history (

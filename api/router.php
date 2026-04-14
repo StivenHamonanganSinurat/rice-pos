@@ -194,6 +194,22 @@ switch ($action) {
                 $totalPrice = floatval($item['subtotal']);
                 $grandTotal += $totalPrice;
 
+                // Hitung Modal & Laba
+                $modalPerItem = 0;
+                if ($unit === 'sak') {
+                    $stmtM = $pdo->prepare("SELECT harga_beli_sak FROM sak_pricing WHERE id = ?");
+                    $stmtM->execute([$variantId]);
+                    $modalPerItem = floatval($stmtM->fetchColumn());
+                } else {
+                    $stmtM = $pdo->prepare("SELECT harga_beli_kg FROM products WHERE id = ?");
+                    $stmtM->execute([$productId]);
+                    $modalPerItem = floatval($stmtM->fetchColumn());
+                }
+                
+                $totalModal = $modalPerItem * $qty;
+                $discountAmount = isset($item['discount_amount']) ? floatval($item['discount_amount']) : 0;
+                $laba = $totalPrice - $totalModal; // totalPrice is net after discount
+
                 // VALIDASI STOK SERVER-SIDE
                 if ($unit === 'sak') {
                     $stmtV = $pdo->prepare("SELECT stok_sak, kg_per_sak, label FROM sak_pricing WHERE id = ?");
@@ -220,8 +236,8 @@ switch ($action) {
                 }
 
                 // Insert Transaction
-                $stmt = $pdo->prepare("INSERT INTO transactions (kasir_id, customer_id, product_id, variant_id, unit, kg_per_sak, qty, total_kg_keluar, total_price, payment_type, nota_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$kasirId, $customerId, $productId, $variantId, $unit, ($unit === 'sak' ? $kgPerSak : null), $qty, $totalKgKeluar, $totalPrice, $paymentType, $nota]);
+                $stmt = $pdo->prepare("INSERT INTO transactions (kasir_id, customer_id, product_id, variant_id, unit, kg_per_sak, qty, total_kg_keluar, total_price, payment_type, nota_number, modal_per_item, laba, discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$kasirId, $customerId, $productId, $variantId, $unit, ($unit === 'sak' ? $kgPerSak : null), $qty, $totalKgKeluar, $totalPrice, $paymentType, $nota, $modalPerItem, $laba, $discountAmount]);
             }
 
             // Jika status HUTANG, tambah ke saldo hutang pelanggan
