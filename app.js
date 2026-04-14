@@ -1013,19 +1013,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Hitung Diskon
         const customerSelect = document.getElementById("pos-customer-select");
+        const specialDiscInput = document.getElementById("pos-special-discount");
         const customerId = customerSelect ? customerSelect.value : "";
-        let discPct = 0;
+        
+        let autoDiscPct = 0;
         let discLabel = "";
         if(customerId) {
-            discPct = discountSettings.discount_member || 0;
+            autoDiscPct = discountSettings.discount_member || 0;
             discLabel = "Member";
         } else {
-            discPct = discountSettings.discount_umum || 0;
+            autoDiscPct = discountSettings.discount_umum || 0;
             discLabel = "Umum";
         }
 
-        const discAmount = subtotal * (discPct / 100);
-        const grandTotal = subtotal - discAmount;
+        const manualDiscPct = parseFloat(specialDiscInput?.value || 0);
+        const totalDiscPct = autoDiscPct + manualDiscPct;
+
+        const autoDiscAmount = subtotal * (autoDiscPct / 100);
+        const manualDiscAmount = subtotal * (manualDiscPct / 100);
+        const grandTotal = subtotal - autoDiscAmount - manualDiscAmount;
 
         // Tampilkan info diskon di bawah tabel
         let discInfo = document.getElementById("pos-discount-info");
@@ -1035,21 +1041,34 @@ document.addEventListener("DOMContentLoaded", () => {
             tableCart.parentElement.parentElement.insertBefore(discInfo, tableCart.parentElement.nextSibling);
         }
         
-        if(discPct > 0) {
-            discInfo.innerHTML = `
+        if(totalDiscPct > 0) {
+            let html = `
                 <div style="padding:10px 15px; margin-top:8px; border-radius:8px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2);">
                     <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.85em;">
                         <span>Subtotal</span><span>${formatRp(subtotal)}</span>
-                    </div>
+                    </div>`;
+            
+            if (autoDiscPct > 0) {
+                html += `
                     <div style="display:flex; justify-content:space-between; color:var(--success); font-size:0.85em; margin-top:4px;">
-                        <span>🏷️ Diskon ${discLabel} (${discPct}%)</span><span>- ${formatRp(discAmount)}</span>
-                    </div>
-                </div>`;
+                        <span>🏷️ Diskon ${discLabel} (${autoDiscPct}%)</span><span>- ${formatRp(autoDiscAmount)}</span>
+                    </div>`;
+            }
+            
+            if (manualDiscPct > 0) {
+                html += `
+                    <div style="display:flex; justify-content:space-between; color:var(--accent); font-size:0.85em; margin-top:4px;">
+                        <span>✨ Diskon Khusus (${manualDiscPct}%)</span><span>- ${formatRp(manualDiscAmount)}</span>
+                    </div>`;
+            }
+
+            html += `</div>`;
+            discInfo.innerHTML = html;
         } else {
             discInfo.innerHTML = "";
         }
 
-        posGrandTotal.innerText = formatRp(grandTotal);
+        posGrandTotal.innerText = formatRp(Math.max(0, grandTotal));
         posItemCount.innerText = `${cart.length} Item`;
     }
  
@@ -1085,13 +1104,18 @@ document.addEventListener("DOMContentLoaded", () => {
             btnProcessPos.innerText = "Memproses...";
  
             // Hitung diskon yang berlaku
-            let discPct = 0;
+            const specialDiscInput = document.getElementById("pos-special-discount");
+            const manualDiscPct = parseFloat(specialDiscInput?.value || 0);
+            
+            let autoDiscPct = 0;
             if(customerId) {
-                discPct = discountSettings.discount_member || 0;
+                autoDiscPct = discountSettings.discount_member || 0;
             } else {
-                discPct = discountSettings.discount_umum || 0;
+                autoDiscPct = discountSettings.discount_umum || 0;
             }
-            const discMultiplier = 1 - (discPct / 100);
+            
+            const totalDiscPct = autoDiscPct + manualDiscPct;
+            const discMultiplier = 1 - (totalDiscPct / 100);
 
             // Terapkan diskon ke subtotal setiap item
             const discountedItems = cart.map(item => ({
@@ -1105,7 +1129,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     kasirId: currentUser.id,
                     customerId: customerId,
                     paymentType: paymentType,
-                    discount_pct: discPct,
+                    discount_pct: totalDiscPct,
                     items: discountedItems
                 })
             })
@@ -1116,9 +1140,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 if(data.status === "success") {
                     let msg = `Transaksi Berhasil Selesai!\nNota: ${data.nota}`;
-                    if(discPct > 0) msg += `\nDiskon: ${discPct}%`;
+                    if(totalDiscPct > 0) msg += `\nTotal Diskon: ${totalDiscPct}%`;
                     customAlert(msg, "Transaksi Sukses", "🎉");
                     cart = [];
+                    if(specialDiscInput) specialDiscInput.value = 0; // Reset manual discount
                     renderCart();
                     fetchDataFromServer(); // Refresh stok
                 } else {
@@ -1702,4 +1727,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Listen to customer select change to recalc discount in cart
     const posCustomerSelect2 = document.getElementById("pos-customer-select");
     if(posCustomerSelect2) posCustomerSelect2.addEventListener("change", () => renderCart());
+
+    const specialDiscInput2 = document.getElementById("pos-special-discount");
+    if(specialDiscInput2) specialDiscInput2.addEventListener("input", () => renderCart());
 });

@@ -275,11 +275,15 @@
                                     </select>
                                 </div>
                                 <div class="input-group">
-                                    <label>Metode Pembayaran</label>
+                                    <label>Status Bayar</label>
                                     <select id="pos-payment-status">
                                         <option value="lunas">Lunas (Tunai/Transfer)</option>
                                         <option value="hutang">Piutang (Hutang)</option>
                                     </select>
+                                </div>
+                                <div class="input-group" style="margin-top: 10px;">
+                                    <label>Diskon Khusus (%) <small style="color:var(--accent);">*Manual</small></label>
+                                    <input type="number" id="pos-special-discount" value="0" min="0" max="100" step="0.1" style="background: rgba(251, 191, 36, 0.05); border: 1px dashed var(--accent);">
                                 </div>
                             </div>
                             <div class="stat-card" style="background: rgba(15, 23, 42, 0.9); border: 2px solid var(--accent); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; border-radius:18px; box-shadow: 0 15px 30px rgba(0,0,0,0.4);">
@@ -818,7 +822,7 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts dipanggil dari bawah agar DOM Load duluan -->
-    <script src="app.js?v=148"></script>
+    <script src="app.js?v=149"></script>
 
     <!-- Mobile Sidebar Toggle -->
     <script>
