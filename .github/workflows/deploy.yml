@@ -1,0 +1,33 @@
+name: Deploy to InfinityFree via FTP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: 🚀 Deploy ke InfinityFree
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Kode
+        uses: actions/checkout@v4
+
+      - name: 📤 Upload via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./
+          server-dir: /htdocs/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.vscode/**
+            **/scratch/**
+            **/api/config.local.php
+            **/.gitignore
+            **/DEPLOY.md
+            **/database_full.sql
+            **/database.sql

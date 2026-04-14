@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Manajemen Toko Beras</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- LAYAR LOGIN -->
+    <div id="login-screen" class="screen">
+        <div class="glass-panel login-box">
+            <h2>Masuk ke Sistem</h2>
+            <p>Masukkan kredensial Anda</p>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="admin">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="123">
+            </div>
+            <button id="btn-login" class="btn-primary">Login</button>
+            <div id="login-error" class="error-text"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="app-screen" class="screen" style="display: none;">
+        
+        <!-- MOBILE HEADER (HANYA MUNCUL DI HP) -->
+        <div class="mobile-header">
+            <button id="btn-toggle-sidebar" class="icon-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div class="logo">🌾 BerasPOS</div>
+            <div style="width: 40px;"></div> <!-- Spacer -->
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar glass-panel" id="main-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🌾 BerasPOS</div>
+                <button id="btn-close-sidebar" class="mobile-only icon-btn" style="color:var(--text-muted);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <div class="user-info">
+                <div class="avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div>
+                    <div id="lbl-username" style="font-weight: 700; font-size: 1em;">Admin</div>
+                    <div class="role-badge" id="lbl-role" style="font-size: 0.7em; margin-top: 2px;">SuperAdmin</div>
+                </div>
+            </div>
+
+            <nav class="menu">
+                <button class="menu-btn active" data-target="page-dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dasbor
+                </button>
+                <button class="menu-btn role-kasir role-admin" data-target="page-pos">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    Kasir (POS)
+                </button>
+                <button class="menu-btn role-gudang role-admin" data-target="page-stock">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+                    Stok Beras
+                </button>
+                <button class="menu-btn role-kasir role-admin" data-target="page-customers">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Pelanggan
+                </button>
+                <button class="menu-btn role-kasir role-admin" data-target="page-reports">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Laporan
+                </button>
+                <button class="menu-btn role-admin" data-target="page-staff">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                    Kelola Staff
+                </button>
+            </nav>
+
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button id="btn-logout" class="btn-danger" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Keluar
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN KONTEN -->
+        <main class="content">
+            
+            <!-- HALAMAN DASBOR -->
+            <section id="page-dashboard" class="page active">
+                <header class="page-header">
+                    <h2>Dasbor Penjualan</h2>
+                    <div class="filter-group glass-panel">
+                        <select id="dash-filter">
+                            <option value="daily">Hari Ini</option>
+                            <option value="weekly">Minggu Ini</option>
+                            <option value="monthly">Bulan Ini</option>
+                            <option value="yearly">Tahun Ini</option>
+                        </select>
+                    </div>
+                </header>
+                <div class="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                    <!-- BARIS KEUANGAN UTAMA -->
+                    <div class="stat-card glass-panel" style="border-left: 5px solid #10b981;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <small style="color:#10b981; font-weight:700; letter-spacing: 1px;">TOTAL OMZET (PENJUALAN)</small>
+                                <div class="value" id="stat-revenue" style="color:#10b981; font-size: 1.8em; margin-top: 5px;">Rp 0</div>
+                            </div>
+                            <div style="font-size: 1.5em; opacity: 0.3;">💰</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel" style="border-left: 5px solid #f59e0b;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <small style="color:#f59e0b; font-weight:700; letter-spacing: 1px;">UANG TUNAI MASUK (CASH)</small>
+                                <div class="value" id="stat-cash-in" style="color:#f59e0b; font-size: 1.8em; margin-top: 5px;">Rp 0</div>
+                            </div>
+                            <div style="font-size: 1.5em; opacity: 0.3;">🏦</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel" style="border-left: 5px solid #ef4444;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <small style="color:#ef4444; font-weight:700; letter-spacing: 1px;">PIUTANG BARU / SISA TOTAL</small>
+                                <div style="display:flex; align-items: baseline; gap:10px; margin-top:5px;">
+                                    <span class="value" id="stat-new-debt" style="color:#ef4444; font-size: 1.8em;">Rp 0</span>
+                                    <span style="opacity:0.5;">/</span>
+                                    <span id="stat-total-debt-active" style="color:#f87171; font-weight:bold; font-size: 1.1em;">Rp 0</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 1.5em; opacity: 0.3;">⏳</div>
+                        </div>
+                    </div>
+
+                    <!-- BARIS MODAL & LABA -->
+                    <div class="stat-card glass-panel" style="border-left: 5px solid #64748b;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <small style="color:#64748b; font-weight:700; letter-spacing: 1px;">TOTAL MODAL</small>
+                                <div class="value" id="stat-expense" style="color:#94a3b8; font-size: 1.8em; margin-top: 5px;">Rp 0</div>
+                            </div>
+                            <div style="font-size: 1.5em; opacity: 0.3;">📉</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel" style="border-left: 5px solid #8b5cf6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <small style="color:#8b5cf6; font-weight:700; letter-spacing: 1px;">LABA BERSIH ESTIMASI</small>
+                                <div class="value" id="stat-profit" style="color:#8b5cf6; font-size: 1.8em; margin-top: 5px;">Rp 0</div>
+                            </div>
+                            <div style="font-size: 1.5em; opacity: 0.3;">💎</div>
+                        </div>
+                    </div>
+
+                    <!-- BARIS STOK (SMALLER) -->
+                    <div class="stat-card glass-panel" style="display: flex; flex-direction: row; gap: 20px; align-items: center; grid-column: span 1;">
+                         <div style="flex:1;">
+                            <small style="color:#3b82f6; font-weight:700;">STOK MASUK</small>
+                            <div id="stat-stock-in" style="font-weight:bold;">0 Kg</div>
+                         </div>
+                         <div style="flex:1;">
+                            <small style="color:#f97316; font-weight:700;">STOK KELUAR</small>
+                            <div id="stat-stock-out" style="font-weight:bold;">0 Kg</div>
+                         </div>
+                         <div style="flex:1;">
+                            <small style="color:#cbd5e1; font-weight:700;">SISA GUDANG</small>
+                            <div id="stat-stock-rem" style="font-weight:bold;">0 Kg</div>
+                         </div>
+                    </div>
+                </div>
+                <!-- CHART AREA -->
+                <div class="chart-container glass-panel">
+                    <canvas id="salesChart"></canvas>
+                </div>
+                <br>
+                <div class="alert-box glass-panel" id="stock-alerts">
+                    <h4>Peringatan Stok Menipis</h4>
+                    <ul id="alert-list"></ul>
+                </div>
+            </section>
+
+            <!-- HALAMAN KASIR (POS) -->
+            <section id="page-pos" class="page" style="display: none;">
+                <header class="page-header"><h2>Kasir & Transaksi Baru</h2></header>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1.8fr; gap: 20px; align-items: start;">
+                    <!-- SISI KIRI: INPUT ITEM -->
+                    <div class="glass-panel" style="padding: 25px;">
+                        <div class="input-group">
+                            <label>Tanggal Transaksi</label>
+                            <input type="date" id="pos-date" disabled style="color-scheme: dark; opacity: 0.7;">
+                        </div>
+                        <div class="input-group">
+                            <label>Pilih Beras</label>
+                            <select id="pos-product-select">
+                                <option value="">-- Cari / Pilih Beras --</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group" style="flex:2;">
+                                <label>Satuan Jual</label>
+                                <select id="pos-unit-select">
+                                    <option value="kg">Eceran (Kilogram)</option>
+                                    <option value="sak">Karung / Sak</option>
+                                </select>
+                            </div>
+                            <div class="input-group" id="pos-sak-variant-group" style="display:none; flex:2;">
+                                <label>Ukuran Sak</label>
+                                <select id="pos-sak-variant">
+                                    <option value="">-- Pilih --</option>
+                                </select>
+                            </div>
+                            <div class="input-group" style="flex:1;">
+                                <label>Jumlah</label>
+                                <input type="number" id="pos-qty" value="1" step="0.01">
+                            </div>
+                        </div>
+                        <div class="stat-card" style="margin: 20px 0; background: rgba(255,255,255,0.05); text-align:center;">
+                            <small>Harga Satuan:</small>
+                            <h2 id="pos-price-display" style="margin: 5px 0; color:var(--accent);">Rp 0</h2>
+                        </div>
+                        <button id="btn-add-to-cart" class="btn-primary" style="background: var(--accent); width:100%; height:50px; font-weight:600;">➕ Tambahkan ke Daftar</button>
+                    </div>
+
+                    <!-- SISI KANAN: DAFTAR BELANJA & PEMBAYARAN -->
+                    <div class="glass-panel" style="padding: 25px; display: flex; flex-direction: column; gap: 20px; min-height:510px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin:0;">🛒 Daftar Belanja</h3>
+                            <button id="btn-clear-cart" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.8em;">🗑️ Kosongkan</button>
+                        </div>
+                        
+                        <div style="flex-grow:1; max-height: 250px; overflow-y: auto; border:1px solid rgba(255,255,255,0.05); border-radius:8px;">
+                            <table class="data-table" style="font-size: 0.85em;">
+                                <thead style="position: sticky; top:0; background: var(--bg-color); z-index:10;">
+                                    <tr>
+                                        <th>Produk</th>
+                                        <th>Qty</th>
+                                        <th style="text-align:right;">Subtotal</th>
+                                        <th style="text-align:center;">Hapus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-cart">
+                                    <tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:50px;">Keranjang Kosong</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                            <div>
+                                <div class="input-group">
+                                    <label>Pelanggan (Wajib jika Hutang)</label>
+                                    <select id="pos-customer-select">
+                                        <option value="">-- Pelanggan Umum --</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Metode Pembayaran</label>
+                                    <select id="pos-payment-status">
+                                        <option value="lunas">Lunas (Tunai/Transfer)</option>
+                                        <option value="hutang">Piutang (Hutang)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="background: rgba(15, 23, 42, 0.9); border: 2px solid var(--accent); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; border-radius:18px; box-shadow: 0 15px 30px rgba(0,0,0,0.4);">
+                                <small style="color:var(--text-muted); font-weight:700; letter-spacing:2px; text-transform: uppercase;">Total Bayar</small>
+                                <h1 id="pos-grand-total" style="margin: 10px 0; font-size: 2.8em; color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); font-weight: 800;">Rp 0</h1>
+                                <small id="pos-item-count" style="background:var(--accent); color:var(--bg-color); padding:4px 15px; border-radius:20px; font-weight:bold; font-size:0.8em;">0 Item</small>
+                            </div>
+                        </div>
+
+                        <button id="btn-process-pos" class="btn-primary" style="height: 70px; font-size: 1.3em; font-weight:800; background: linear-gradient(135deg, #fbbf24, #f59e0b); color:#1e293b; border:none; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2);">🚀 Selesaikan & Bayar</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HALAMAN STOK -->
+            <section id="page-stock" class="page" style="display: none;">
+                <header class="page-header">
+                    <h2>Manajemen Stok Beras</h2>
+                    <button id="btn-add-product" class="btn-primary admin-only" style="width: auto;">➕ Tambah Beras</button>
+                </header>
+                <div class="glass-panel">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama Beras</th>
+                                <th>Sisa Stok</th>
+                                <th>Harga Eceran (/Kg)</th>
+                                <th>Varian Sak</th>
+                                <th class="admin-only">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-stok"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- HALAMAN PELANGGAN -->
+            <section id="page-customers" class="page" style="display: none;">
+                <header class="page-header" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2>Daftar Pelanggan & Piutang</h2>
+                    </div>
+                    <div class="input-group" style="margin-bottom:0; width: 300px; position:relative;">
+                        <input type="text" id="search-customer" placeholder="🔎 Cari nama atau HP..." style="padding-left: 40px; border-radius: 12px; height: 45px;">
+                        <span style="position:absolute; left: 15px; top: 12px; opacity: 0.5;">🔎</span>
+                    </div>
+                    <button id="btn-add-customer" class="btn-primary" style="width:auto;">➕ Tambah Pelanggan</button>
+                </header>
+                <div class="glass-panel">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Pelanggan</th>
+                                <th>No Handphone</th>
+                                <th>Total Hutang</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-customer"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="page-reports" class="page" style="display: none;">
+                <header class="page-header" style="flex-direction: column; align-items: flex-start; gap: 20px;">
+                    <div>
+                        <h2 style="font-size: 2em; margin-bottom: 5px;">📊 Laporan Penjualan</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9em;">Analisa performa penjualan beras dan piutang pelanggan.</p>
+                    </div>
+                    
+                    <div class="filter-group glass-panel" style="display: flex; flex-wrap: wrap; gap: 15px; width: 100%; padding: 20px; border-radius: 20px;">
+                        <div class="input-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+                            <label>Dari Tanggal</label>
+                            <input type="date" id="report-date-from" style="color-scheme: dark;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+                            <label>Sampai Tanggal</label>
+                            <input type="date" id="report-date-to" style="color-scheme: dark;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; flex: 1.5; min-width: 200px;">
+                            <label>Filter Produk</label>
+                            <select id="report-filter-product">
+                                <option value="">-- Semua Produk --</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; flex: 1.5; min-width: 200px;">
+                            <label>Filter Pelanggan</label>
+                            <select id="report-filter-customer">
+                                <option value="">-- Semua Pelanggan --</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+                            <label>Cari No. Nota</label>
+                            <input type="text" id="report-filter-nota" placeholder="INV-..." style="height: 42px;">
+                        </div>
+                        <button id="btn-filter-report" class="btn-primary" style="width: auto; height: 42px; margin-top: auto; padding: 0 30px;">Cari Data</button>
+                    </div>
+                </header>
+
+                <!-- Summary Cards for Reports -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div class="glass-panel" style="padding: 20px; border-left: 5px solid #10b981; position: relative; overflow: hidden;">
+                        <small style="color: var(--text-muted); font-weight: 700; letter-spacing: 1px;">TOTAL OMZET (LUNAS)</small>
+                        <h2 id="report-stat-omzet" style="color: #10b981; margin-top: 10px; font-size: 1.8em;">Rp 0</h2>
+                        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 5em; opacity: 0.05; color: #10b981;">💰</div>
+                    </div>
+                    <div class="glass-panel" style="padding: 20px; border-left: 5px solid #ef4444; position: relative; overflow: hidden;">
+                        <small style="color: var(--text-muted); font-weight: 700; letter-spacing: 1px;">TOTAL PIUTANG (HUTANG)</small>
+                        <h2 id="report-stat-piutang" style="color: #ef4444; margin-top: 10px; font-size: 1.8em;">Rp 0</h2>
+                        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 5em; opacity: 0.05; color: #ef4444;">⏳</div>
+                    </div>
+                    <div class="glass-panel" style="padding: 20px; border-left: 5px solid #3b82f6; position: relative; overflow: hidden;">
+                        <small style="color: var(--text-muted); font-weight: 700; letter-spacing: 1px;">ITEM TERJUAL</small>
+                        <h2 id="report-stat-items" style="color: #3b82f6; margin-top: 10px; font-size: 1.8em;">0 Item</h2>
+                        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 5em; opacity: 0.05; color: #3b82f6;">🌾</div>
+                    </div>
+                </div>
+
+                <div class="glass-panel" style="padding: 5px; border-radius: 20px; overflow: hidden;">
+                    <table class="data-table" style="border-radius: 0;">
+                        <thead>
+                            <tr>
+                                <th style="padding-left: 20px;">Tanggal</th>
+                                <th>ID Nota</th>
+                                <th>Produk</th>
+                                <th style="text-align: center;">Qty</th>
+                                <th>Subtotal</th>
+                                <th>Pelanggan</th>
+                                <th>Status</th>
+                                <th style="text-align: right; padding-right: 20px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-reports"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="page-users" class="page admin-only" style="display: none;">
+                <header class="page-header"><h2>Manajemen Pengguna (Kasir)</h2></header>
+                <p>Fitur SuperAdmin untuk menambah akun pegawai.</p>
+                <!-- Simplified for demo -->
+                <div class="glass-panel">
+                    <ul id="user-list"></ul>
+                </div>
+            </section>
+
+            <div id="page-staff" class="page" style="display: none;">
+                <div class="page-header" style="flex-direction: column; align-items: flex-start; gap: 20px;">
+                    <div>
+                        <h2 style="font-size: 2em; margin-bottom: 5px;">👥 Manajemen Staff</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9em;">Kelola hak akses dan akun pegawai sistem Rice POS.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-add-staff" style="width: auto; padding: 12px 25px; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, var(--accent), #f59e0b);">
+                        ➕ Tambah Staff Baru
+                    </button>
+                </div>
+
+                <!-- Quick Stats Staff -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div class="glass-panel" style="padding: 15px; display: flex; align-items: center; gap: 15px;">
+                        <div style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; padding: 10px; border-radius: 10px; font-size: 1.5em;">👤</div>
+                        <div>
+                            <small style="color: var(--text-muted);">Total Staff</small>
+                            <h3 id="stat-staff-total">0</h3>
+                        </div>
+                    </div>
+                    <div class="glass-panel" style="padding: 15px; display: flex; align-items: center; gap: 15px;">
+                        <div style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 10px; border-radius: 10px; font-size: 1.5em;">📦</div>
+                        <div>
+                            <small style="color: var(--text-muted);">Bag. Gudang</small>
+                            <h3 id="stat-staff-gudang">0</h3>
+                        </div>
+                    </div>
+                    <div class="glass-panel" style="padding: 15px; display: flex; align-items: center; gap: 15px;">
+                        <div style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 10px; border-radius: 10px; font-size: 1.5em;">🛒</div>
+                        <div>
+                            <small style="color: var(--text-muted);">Kasir</small>
+                            <h3 id="stat-staff-kasir">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel" style="padding: 5px; border-radius: 20px; overflow: hidden;">
+                    <table class="data-table" style="border-radius: 0;">
+                        <thead>
+                            <tr>
+                                <th style="padding-left: 20px;">ID</th>
+                                <th>Username</th>
+                                <th>Hak Akses / Jabatan</th>
+                                <th style="text-align: right; padding-right: 20px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-staff"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- USER/STAFF MODAL -->
+    <div id="staff-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="width: 400px; padding: 25px;">
+            <h2 id="modal-staff-title">Tambah Staff</h2>
+            <hr style="margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+            
+            <input type="hidden" id="modal-staff-id">
+            
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="modal-staff-username" placeholder="Cth: kiki_kasir">
+            </div>
+            
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="modal-staff-password" placeholder="Min 4 karakter">
+                <small style="color:var(--text-muted); font-size:0.7em;">Isi jika ingin mengganti password</small>
+            </div>
+            
+            <div class="input-group">
+                <label>Role / Akses</label>
+                <select id="modal-staff-jabatan">
+                    <option value="kasir">Kasir (POS & Laporan)</option>
+                    <option value="gudang">Bagian Gudang (Hanya Input Stok)</option>
+                    <option value="superadmin">Super Admin (Akses Penuh)</option>
+                </select>
+            </div>
+
+            <div class="input-row" style="margin-top:20px;">
+                <button id="btn-close-staff-modal" class="btn-danger" style="flex:1;">Batal</button>
+                <button id="btn-save-staff" class="btn-primary" style="flex:2; margin-left:15px;">Simpan Staff</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCT MODAL -->
+    <div id="product-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; width: 600px; padding: 30px;">
+            <h2 id="modal-product-title">Tambah Beras Baru</h2>
+            <hr style="margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+            
+            <input type="hidden" id="modal-product-id">
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Kode Beras <small>(Otomatis)</small></label>
+                    <input type="text" id="modal-product-kode" readonly style="background: rgba(0,0,0,0.4); color: var(--text-muted); cursor: not-allowed;">
+                </div>
+                <div class="input-group">
+                    <label>Nama Beras</label>
+                    <input type="text" id="modal-product-nama" placeholder="Beras Pandan Wangi">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Stok Gudang (Kg) <small class="admin-only">(Otomatis/Terkunci)</small></label>
+                    <input type="number" id="modal-product-stok" step="0.01" value="0" readonly style="background: rgba(0,0,0,0.4); color: var(--accent); font-weight: bold; cursor: not-allowed;">
+                </div>
+                <div class="input-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        Tanggal Masuk
+                        <span style="display:flex; align-items:center; gap:5px; font-size:0.85em; color:var(--text-muted);">
+                            <input type="checkbox" id="modal-product-date-now" style="width:auto; accent-color:var(--accent);" checked>
+                            Sekarang
+                        </span>
+                    </label>
+                    <input type="datetime-local" id="modal-product-date" style="color-scheme: dark;">
+                </div>
+            </div>
+
+            <div class="input-row" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+                <div class="input-group">
+                    <label style="color:#ef4444;">Harga Beli Master (/Kg)</label>
+                    <input type="number" id="modal-product-harga-beli" placeholder="Cth: 12000" style="border-color: rgba(239,68,68,0.3);">
+                </div>
+                <div class="input-group">
+                    <label style="color:#10b981;">Harga Jual Eceran (/Kg)</label>
+                    <input type="number" id="modal-product-harga-jual" placeholder="Cth: 14000" style="border-color: rgba(16,185,129,0.3);">
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>Daftar Ukuran & Harga Sak <small style="color:var(--accent); font-weight:normal;">(+ Kalkulator Stok)</small></h3>
+                    <button id="btn-add-variant-row" class="btn-primary" style="padding: 5px 15px; font-size: 0.85em; width: auto;">+ Varian Karung</button>
+                </div>
+                <div id="variants-container">
+                    <!-- Dynamic Rows API -->
+                </div>
+            </div>
+
+            <div class="input-row" style="margin-top: 30px;">
+                <button id="btn-close-product-modal" class="btn-danger" style="flex: 1;">Batal</button>
+                <button id="btn-save-product" class="btn-primary" style="flex: 2; margin-left: 15px;">Simpan Beras</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOMER MODAL -->
+    <div id="customer-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="width: 400px; padding: 25px;">
+            <h2 id="modal-customer-title">Tambah Pelanggan</h2>
+            <hr style="margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+            <input type="hidden" id="modal-customer-id">
+            <div class="input-group">
+                <label>Nama Pelanggan</label>
+                <input type="text" id="modal-customer-nama" placeholder="Budi Santoso">
+            </div>
+            <div class="input-group">
+                <label>No Handphone</label>
+                <input type="text" id="modal-customer-phone" placeholder="0812...">
+            </div>
+            <div class="input-row" style="margin-top:20px;">
+                <button id="btn-close-customer-modal" class="btn-danger" style="flex:1;">Batal</button>
+                <button id="btn-save-customer" class="btn-primary" style="flex:2; margin-left:15px;">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div id="payment-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="width: 400px; padding: 25px;">
+            <h2>Pembayaran Hutang</h2>
+            <hr style="margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+            <input type="hidden" id="payment-customer-id">
+            <div class="stat-card" style="margin-bottom:20px; background:rgba(255,255,255,0.05);">
+                <small>Total Hutang Saat Ini:</small>
+                <h3 id="payment-current-debt" class="danger-text">Rp 0</h3>
+            </div>
+            <div class="input-group">
+                <label>Jumlah Bayar (Rp)</label>
+                <input type="number" id="payment-amount" placeholder="Cth: 50000">
+            </div>
+            <div class="input-group">
+                <label style="display:flex; align-items:center; gap:10px;">
+                    Tanggal Pembayaran
+                    <span style="display:flex; align-items:center; gap:5px; font-size:0.85em; color:var(--text-muted);">
+                        <input type="checkbox" id="payment-date-now" style="width:auto; accent-color:var(--accent);" checked>
+                        Sekarang
+                    </span>
+                </label>
+                <input type="datetime-local" id="payment-date" style="color-scheme: dark;">
+            </div>
+            <div class="input-group">
+                <label>Metode Pembayaran</label>
+                <select id="payment-method">
+                    <option value="Cash">Tunai (Cash)</option>
+                    <option value="Transfer">Transfer Bank</option>
+                    <option value="Cicilan">Cicilan</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Keterangan / Catatan</label>
+                <input type="text" id="payment-notes" placeholder="Pelunasan Nota #XX">
+            </div>
+            <div class="input-row" style="margin-top:20px;">
+                <button id="btn-close-payment-modal" class="btn-danger" style="flex:1;">Batal</button>
+                <button id="btn-save-payment" class="btn-primary" style="flex:2; margin-left:15px;">Proses Pembayaran</button>
+            </div>
+        </div>
+    </div>
+    <!-- CUSTOMER HISTORY MODAL -->
+    <div id="customer-history-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="width: 700px; padding: 30px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Riwayat Pembayaran Pelanggan</h2>
+                <button class="btn-danger" onclick="document.getElementById('customer-history-modal').style.display='none'" style="width:auto; padding:5px 15px;">Tutup</button>
+            </div>
+            <hr style="margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+            <h3 id="customer-history-name" style="color:var(--accent);">-- Nama Pelanggan --</h3>
+            <div style="max-height: 400px; overflow-y: auto; margin-top:20px;">
+                <table class="data-table" style="font-size:0.9em;">
+                    <thead>
+                        <tr>
+                            <th>Tgl Bayar</th>
+                            <th>Petugas</th>
+                            <th>Hutang Awal</th>
+                            <th>Bayar</th>
+                            <th>Sisa Hutang</th>
+                            <th>Ket</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-customer-history"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div id="history-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="width: 700px; padding: 30px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Riwayat Aktivitas Produk</h2>
+                <button class="btn-danger" onclick="document.getElementById('history-modal').style.display='none'" style="width:auto; padding:5px 15px;">Tutup</button>
+            </div>
+            <hr style="margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+            
+            <h3 id="history-product-name" style="color:var(--accent);">-- Nama Beras --</h3>
+            <div id="history-container" style="max-height: 400px; overflow-y: auto; margin-top:20px;">
+                <table class="data-table" style="font-size:0.9em;">
+                    <thead>
+                        <tr>
+                            <th>TGL INPUT (SISTEM)</th>
+                            <th>TGL MASUK (FISIK)</th>
+                            <th>PETUGAS</th>
+                            <th>AKSI</th>
+                            <th>DETAIL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-history"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT TRANSACTION MODAL -->
+    <div id="edit-tx-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="width: 400px; padding: 25px;">
+            <h2>Edit Transaksi</h2>
+            <hr style="margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+            <input type="hidden" id="edit-tx-id">
+            <div class="stat-card" style="margin-bottom:20px; background:rgba(255,255,255,0.05);">
+                <small>Produk:</small>
+                <h4 id="edit-tx-product-name" style="margin:5px 0;">--</h4>
+                <small id="edit-tx-unit-text">Satuan: --</small>
+            </div>
+            <div class="input-group">
+                <label>Jumlah (Qty)</label>
+                <input type="number" id="edit-tx-qty" step="0.01">
+            </div>
+            <div class="input-group">
+                <label>Status Pembayaran</label>
+                <select id="edit-tx-payment">
+                    <option value="lunas">Lunas</option>
+                    <option value="hutang">Hutang</option>
+                </select>
+            </div>
+            <div class="input-row" style="margin-top:20px;">
+                <button id="btn-close-edit-tx" class="btn-danger" style="flex:1;">Batal</button>
+                <button id="btn-save-edit-tx" class="btn-primary" style="flex:2; margin-left:15px;">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <!-- CUSTOM DIALOG MODAL (Premium Confirm/Alert) -->
+    <div id="dialog-modal" class="modal-overlay" style="display: none; z-index: 10000;">
+        <div class="modal-content glass-panel" style="width: 400px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
+            <div id="dialog-icon" style="font-size: 3rem; margin-bottom: 20px;">❓</div>
+            <h2 id="dialog-title">Konfirmasi</h2>
+            <p id="dialog-message" style="margin: 20px 0; color: var(--text-muted); line-height: 1.6;"></p>
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button id="dialog-btn-cancel" class="btn-danger" style="flex: 1; height: 45px;">Batal</button>
+                <button id="dialog-btn-ok" class="btn-primary" style="flex: 1; height: 45px; background: var(--accent);">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts dipanggil dari bawah agar DOM Load duluan -->
+    <script src="app.js?v=144"></script>
+</body>
+</html>
