@@ -679,7 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if(filterCustomer) {
             const currentVal = filterCustomer.value;
-            filterCustomer.innerHTML = '<option value="">-- Semua Pelanggan --</option>';
+            filterCustomer.innerHTML = '<option value="">-- Semua Pelanggan --</option><option value="UMUM">Pelanggan Umum (Tanpa Nama)</option>';
             customersList.forEach(c => {
                 const opt = new Option(c.nama, c.id);
                 filterCustomer.appendChild(opt);

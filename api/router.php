@@ -26,6 +26,7 @@ try {
     $pdo->exec("UPDATE `users` SET `akses_level` = 'superadmin' WHERE `username` = 'admin' AND (`akses_level` IS NULL OR `akses_level` = '')");
     
     $pdo->exec("ALTER TABLE `users` AUTO_INCREMENT = 1");
+    $pdo->exec("ALTER TABLE `customers` AUTO_INCREMENT = 1");
 } catch(Exception $e) { }
 
 $action = isset($_GET['action']) ? $_GET['action'] : '';
@@ -75,8 +76,12 @@ switch ($action) {
             $paramsTx[] = $productId;
         }
         if ($customerIdFilter) {
-            $sqlTx .= " AND t.customer_id = ?";
-            $paramsTx[] = $customerIdFilter;
+            if ($customerIdFilter === 'UMUM') {
+                $sqlTx .= " AND (t.customer_id IS NULL OR t.customer_id = 0)";
+            } else {
+                $sqlTx .= " AND t.customer_id = ?";
+                $paramsTx[] = $customerIdFilter;
+            }
         }
         
         $nota = isset($_GET['nota']) ? $_GET['nota'] : null;
@@ -433,9 +438,11 @@ switch ($action) {
                  LEFT JOIN users u ON h.user_id = u.id 
                  WHERE h.product_id = ?)
                 UNION ALL
-                (SELECT s.created_at as tgl_sistem, s.tanggal_masuk as tgl_fisik, u.username as petugas, 'STOK_IN' as tipe, 
+                (SELECT s.tanggal_masuk as tgl_sistem, s.tanggal_masuk as tgl_fisik, u.username as petugas, 'STOK_IN' as tipe, 
                  CONCAT('Masuk ', s.jumlah_sak, ' Sak @', s.kg_per_sak, 'kg (Total: ', s.total_kg, 'kg)') as detail
                  FROM stok_masuk s
+                 LEFT JOIN users u ON s.user_id = u.id
+                 WHERE s.product_id = ?)
                  LEFT JOIN users u ON s.user_id = u.id
                  WHERE s.product_id = ?)
                 ORDER BY tgl_sistem DESC";

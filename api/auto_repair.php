@@ -48,6 +48,14 @@ try {
     )");
     echo "[OK] Tabel 'product_history' diperiksa/dibuat.\n";
 
+    // 6. Perbaikan Tabel debt_payments
+    addColumn($pdo, 'debt_payments', 'payment_method', 'VARCHAR(50) DEFAULT "Tunai"');
+    addColumn($pdo, 'debt_payments', 'notes', 'TEXT DEFAULT NULL');
+    addColumn($pdo, 'debt_payments', 'user_id', 'INT DEFAULT NULL');
+    addColumn($pdo, 'debt_payments', 'debt_before', 'DECIMAL(15,2) DEFAULT 0');
+    addColumn($pdo, 'debt_payments', 'debt_after', 'DECIMAL(15,2) DEFAULT 0');
+
+
     echo "\n=== SEMUA PERBAIKAN SELESAI! SILAKAN TEST INPUT LAGI ===\n";
 
 } catch (Exception $e) {
