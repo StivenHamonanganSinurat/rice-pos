@@ -477,3 +477,196 @@ button {
 .variant-row .input-group {
     margin-bottom: 0;
 }
+
+/* ============================================ */
+/* RESPONSIVE DESIGN - TABLET & MOBILE         */
+/* ============================================ */
+
+/* TABLET (max 1024px) */
+@media (max-width: 1024px) {
+    .split-layout {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        width: 240px;
+        padding: 15px;
+    }
+    .content {
+        padding: 20px;
+    }
+    .cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    .variant-row {
+        grid-template-columns: 1fr 1fr 1fr auto;
+    }
+}
+
+/* MOBILE (max 768px) */
+@media (max-width: 768px) {
+    body {
+        align-items: flex-start;
+    }
+    
+    /* Mobile Header tampil */
+    .mobile-header {
+        display: flex !important;
+    }
+    
+    /* Sidebar jadi overlay */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 280px;
+        transform: translateX(-100%);
+        z-index: 1100;
+        background: var(--bg-darker);
+        border-right: 1px solid var(--glass-border);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    /* Sidebar Overlay */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1050;
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    .mobile-only { display: block !important; }
+    .desktop-only { display: none !important; }
+    
+    /* Content area */
+    .content {
+        padding: 15px;
+        padding-top: 75px; /* Ruang untuk mobile header */
+        height: auto;
+        min-height: 100vh;
+        width: 100%;
+    }
+    
+    /* Page Header stack */
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px;
+        padding-top: 10px;
+    }
+    .page-header h2 {
+        font-size: 1.2em;
+    }
+    
+    /* Cards responsive */
+    .cards-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .stat-card {
+        padding: 15px;
+    }
+    .stat-card .value {
+        font-size: 1.3em !important;
+    }
+    .stat-card small {
+        font-size: 0.65em !important;
+    }
+    
+    /* Table scrollable */
+    .glass-panel {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .data-table th, .data-table td {
+        padding: 10px 12px;
+        font-size: 0.8em;
+        white-space: nowrap;
+    }
+    
+    /* Chart area */
+    .chart-container {
+        height: 220px;
+        padding: 10px;
+    }
+    
+    /* Split layout (POS) stack */
+    .split-layout {
+        grid-template-columns: 1fr;
+    }
+    .form-panel, .checkout-panel {
+        padding: 15px;
+    }
+    
+    /* Input rows stack */
+    .input-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    /* Modal smaller */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    /* Variant rows stack */
+    .variant-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    /* Filter inputs */
+    #search-customer {
+        width: 100% !important;
+    }
+    .filter-group select {
+        width: 100%;
+    }
+
+    /* Toast position */
+    .toast-container {
+        top: 70px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    /* Login box */
+    .login-box {
+        padding: 25px;
+        margin: 15px;
+    }
+    
+    /* Total display */
+    .total-display {
+        font-size: 1.1em;
+    }
+    .price-info {
+        font-size: 1em;
+    }
+}
+
+/* SMALL PHONE (max 480px) */
+@media (max-width: 480px) {
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .stat-card .value {
+        font-size: 1.1em !important;
+    }
+    .content {
+        padding: 10px;
+        padding-top: 70px;
+    }
+    .variant-row {
+        grid-template-columns: 1fr;
+    }
+}
