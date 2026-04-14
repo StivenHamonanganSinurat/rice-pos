@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let customersList = [];
     let currentTransactions = [];
     let cart = []; // Keranjang belanja POS
+    let discountSettings = { discount_member: 0, discount_umum: 0 }; // Diskon dari pengaturan
     let currentUser = JSON.parse(sessionStorage.getItem("currentUser") || "null");
  
     // TOAST NOTIFICATION FUNCTION (Modern Version)
@@ -242,6 +243,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 initPOSForm();
             }
         });
+
+        // Load discount settings secara paralel
+        fetch(API_URL + 'get_discount_settings')
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                discountSettings = data.settings;
+                loadDiscountPage();
+                updatePosDiscountDisplay();
+            }
+        }).catch(() => {});
     }
  
     // 2b. NAVIGATION LOGIC
@@ -979,12 +991,15 @@ document.addEventListener("DOMContentLoaded", () => {
             tableCart.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:50px;">Keranjang Kosong</td></tr>';
             posGrandTotal.innerText = "Rp 0";
             posItemCount.innerText = "0 Item";
+            // Hapus info diskon
+            const discInfo = document.getElementById("pos-discount-info");
+            if(discInfo) discInfo.innerHTML = "";
             return;
         }
  
-        let total = 0;
+        let subtotal = 0;
         cart.forEach((item, index) => {
-            total += item.subtotal;
+            subtotal += item.subtotal;
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td><strong>${item.product_name}</strong><br><small style="color:var(--text-muted)">${item.label}</small></td>
@@ -994,8 +1009,46 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             tableCart.appendChild(tr);
         });
- 
-        posGrandTotal.innerText = formatRp(total);
+
+        // Hitung Diskon
+        const customerSelect = document.getElementById("pos-customer-select");
+        const customerId = customerSelect ? customerSelect.value : "";
+        let discPct = 0;
+        let discLabel = "";
+        if(customerId) {
+            discPct = discountSettings.discount_member || 0;
+            discLabel = "Member";
+        } else {
+            discPct = discountSettings.discount_umum || 0;
+            discLabel = "Umum";
+        }
+
+        const discAmount = subtotal * (discPct / 100);
+        const grandTotal = subtotal - discAmount;
+
+        // Tampilkan info diskon di bawah tabel
+        let discInfo = document.getElementById("pos-discount-info");
+        if(!discInfo) {
+            discInfo = document.createElement("div");
+            discInfo.id = "pos-discount-info";
+            tableCart.parentElement.parentElement.insertBefore(discInfo, tableCart.parentElement.nextSibling);
+        }
+        
+        if(discPct > 0) {
+            discInfo.innerHTML = `
+                <div style="padding:10px 15px; margin-top:8px; border-radius:8px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2);">
+                    <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.85em;">
+                        <span>Subtotal</span><span>${formatRp(subtotal)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; color:var(--success); font-size:0.85em; margin-top:4px;">
+                        <span>🏷️ Diskon ${discLabel} (${discPct}%)</span><span>- ${formatRp(discAmount)}</span>
+                    </div>
+                </div>`;
+        } else {
+            discInfo.innerHTML = "";
+        }
+
+        posGrandTotal.innerText = formatRp(grandTotal);
         posItemCount.innerText = `${cart.length} Item`;
     }
  
@@ -1030,13 +1083,29 @@ document.addEventListener("DOMContentLoaded", () => {
             btnProcessPos.disabled = true;
             btnProcessPos.innerText = "Memproses...";
  
+            // Hitung diskon yang berlaku
+            let discPct = 0;
+            if(customerId) {
+                discPct = discountSettings.discount_member || 0;
+            } else {
+                discPct = discountSettings.discount_umum || 0;
+            }
+            const discMultiplier = 1 - (discPct / 100);
+
+            // Terapkan diskon ke subtotal setiap item
+            const discountedItems = cart.map(item => ({
+                ...item,
+                subtotal: Math.round(item.subtotal * discMultiplier)
+            }));
+
             fetch(API_URL + 'transaction_bulk_process', {
                 method: 'POST',
                 body: JSON.stringify({
                     kasirId: currentUser.id,
                     customerId: customerId,
                     paymentType: paymentType,
-                    items: cart
+                    discount_pct: discPct,
+                    items: discountedItems
                 })
             })
             .then(res => res.json())
@@ -1045,7 +1114,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnProcessPos.innerText = "🚀 Proses & Selesaikan Transaksi";
                 
                 if(data.status === "success") {
-                    customAlert(`Transaksi Berhasil Selesai!\nNota: ${data.nota}`, "Transaksi Sukses", "🎉");
+                    let msg = `Transaksi Berhasil Selesai!\nNota: ${data.nota}`;
+                    if(discPct > 0) msg += `\nDiskon: ${discPct}%`;
+                    customAlert(msg, "Transaksi Sukses", "🎉");
                     cart = [];
                     renderCart();
                     fetchDataFromServer(); // Refresh stok
@@ -1567,5 +1638,68 @@ document.addEventListener("DOMContentLoaded", () => {
                 showToast("Gagal: " + data.message, "error");
             }
         });
+        });
     });
+
+    // ====================================================
+    // DISCOUNT PAGE LOGIC
+    // ====================================================
+    const discountMemberInput = document.getElementById("discount-member");
+    const discountUmumInput = document.getElementById("discount-umum");
+
+    function loadDiscountPage() {
+        if(discountMemberInput) discountMemberInput.value = discountSettings.discount_member || 0;
+        if(discountUmumInput) discountUmumInput.value = discountSettings.discount_umum || 0;
+        updateDiscountPreview();
+    }
+
+    function updateDiscountPreview() {
+        const samplePrice = 100000;
+        const memberPct = parseFloat(discountMemberInput?.value || 0);
+        const umumPct = parseFloat(discountUmumInput?.value || 0);
+        const memberSave = samplePrice * (memberPct / 100);
+        const umumSave = samplePrice * (umumPct / 100);
+
+        const memberPreview = document.getElementById("discount-member-preview");
+        if(memberPreview) {
+            memberPreview.innerHTML = `<small style="color:var(--text-muted);">Preview: Beli ${formatRp(samplePrice)}</small>
+                <div style="font-size:1.2em; font-weight:700; color:var(--accent); margin-top:5px;">Bayar: ${formatRp(samplePrice - memberSave)} <span style="font-size:0.7em; color:var(--success);">(hemat ${formatRp(memberSave)})</span></div>`;
+        }
+        const umumPreview = document.getElementById("discount-umum-preview");
+        if(umumPreview) {
+            umumPreview.innerHTML = `<small style="color:var(--text-muted);">Preview: Beli ${formatRp(samplePrice)}</small>
+                <div style="font-size:1.2em; font-weight:700; color:#f59e0b; margin-top:5px;">Bayar: ${formatRp(samplePrice - umumSave)} <span style="font-size:0.7em; color:var(--success);">(hemat ${formatRp(umumSave)})</span></div>`;
+        }
+    }
+
+    if(discountMemberInput) discountMemberInput.addEventListener("input", updateDiscountPreview);
+    if(discountUmumInput) discountUmumInput.addEventListener("input", updateDiscountPreview);
+
+    const btnSaveDiscount = document.getElementById("btn-save-discount");
+    if(btnSaveDiscount) {
+        btnSaveDiscount.addEventListener("click", () => {
+            const member = parseFloat(discountMemberInput.value) || 0;
+            const umum = parseFloat(discountUmumInput.value) || 0;
+            if(member < 0 || member > 100 || umum < 0 || umum > 100) return showToast("Diskon harus antara 0% - 100%!", "error");
+
+            fetch(API_URL + 'save_discount_settings', {
+                method: 'POST',
+                body: JSON.stringify({ discount_member: member, discount_umum: umum })
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    discountSettings.discount_member = member;
+                    discountSettings.discount_umum = umum;
+                    showToast("Pengaturan diskon berhasil disimpan!");
+                    const status = document.getElementById("discount-save-status");
+                    if(status) { status.innerText = "✅ Tersimpan " + new Date().toLocaleTimeString('id-ID'); setTimeout(() => status.innerText = "", 5000); }
+                } else { showToast("Gagal: " + data.message, "error"); }
+            });
+        });
+    }
+
+    function updatePosDiscountDisplay() { /* placeholder, renderCart handles it */ }
+
+    // Listen to customer select change to recalc discount in cart
+    const posCustomerSelect2 = document.getElementById("pos-customer-select");
+    if(posCustomerSelect2) posCustomerSelect2.addEventListener("change", () => renderCart());
 });

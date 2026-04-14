@@ -656,6 +656,52 @@ switch ($action) {
         }
         break;
 
+    case 'get_discount_settings':
+        try {
+            // Auto-create settings table
+            $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )");
+            
+            $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('discount_member', 'discount_umum')");
+            $rows = $stmt->fetchAll();
+            
+            $settings = ['discount_member' => 0, 'discount_umum' => 0];
+            foreach ($rows as $r) {
+                $settings[$r['setting_key']] = floatval($r['setting_value']);
+            }
+            
+            echo json_encode(['status' => 'success', 'settings' => $settings]);
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        break;
+
+    case 'save_discount_settings':
+        $data = json_decode(file_get_contents("php://input"), true);
+        $member = floatval($data['discount_member']);
+        $umum = floatval($data['discount_umum']);
+
+        try {
+            // Auto-create settings table
+            $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )");
+
+            $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+            $stmt->execute(['discount_member', $member]);
+            $stmt->execute(['discount_umum', $umum]);
+
+            echo json_encode(['status' => 'success']);
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        break;
+
     default:
         echo json_encode(["status" => "error", "message" => "Endpoint not found"]);
         break;

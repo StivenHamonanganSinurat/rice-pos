@@ -82,6 +82,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                     Laporan
                 </button>
+                <button class="menu-btn role-admin" data-target="page-discount">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="2"></circle><circle cx="15" cy="15" r="2"></circle><line x1="7.5" y1="16.5" x2="16.5" y2="7.5"></line></svg>
+                    Diskon
+                </button>
                 <button class="menu-btn role-admin" data-target="page-staff">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
                     Kelola Staff
@@ -424,6 +428,80 @@
                 </div>
             </section>
 
+            <!-- HALAMAN DISKON -->
+            <section id="page-discount" class="page" style="display: none;">
+                <header class="page-header">
+                    <div>
+                        <h2 style="font-size: 2em; margin-bottom: 5px;">🏷️ Pengaturan Diskon</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9em;">Atur persentase diskon yang otomatis diterapkan di Kasir (POS).</p>
+                    </div>
+                </header>
+
+                <div class="cards-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <!-- DISKON PELANGGAN TERDAFTAR -->
+                    <div class="glass-panel" style="padding: 30px;">
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                            <div style="width:50px; height:50px; border-radius:12px; background:linear-gradient(135deg, #8b5cf6, #a78bfa); display:flex; align-items:center; justify-content:center; font-size:1.5em;">👤</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.1em;">Pelanggan Terdaftar</h3>
+                                <small style="color:var(--text-muted);">Pelanggan yang sudah terdaftar di sistem</small>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Diskon (%)</label>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="number" id="discount-member" min="0" max="100" step="0.5" value="0" style="font-size:1.5em; text-align:center; font-weight:700;">
+                                <span style="font-size:2em; font-weight:700; color:var(--accent);">%</span>
+                            </div>
+                        </div>
+                        <div id="discount-member-preview" style="margin-top:15px; padding:15px; border-radius:8px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2);">
+                            <small style="color:var(--text-muted);">Preview: Beli Rp 100.000</small>
+                            <div style="font-size:1.2em; font-weight:700; color:var(--accent); margin-top:5px;">Bayar: Rp 100.000 <span style="font-size:0.7em; color:var(--success);">(hemat Rp 0)</span></div>
+                        </div>
+                    </div>
+
+                    <!-- DISKON PELANGGAN UMUM -->
+                    <div class="glass-panel" style="padding: 30px;">
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                            <div style="width:50px; height:50px; border-radius:12px; background:linear-gradient(135deg, #f59e0b, #fbbf24); display:flex; align-items:center; justify-content:center; font-size:1.5em;">🏪</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.1em;">Pelanggan Umum</h3>
+                                <small style="color:var(--text-muted);">Pembeli tanpa identitas / walk-in</small>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Diskon (%)</label>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="number" id="discount-umum" min="0" max="100" step="0.5" value="0" style="font-size:1.5em; text-align:center; font-weight:700;">
+                                <span style="font-size:2em; font-weight:700; color:#f59e0b;">%</span>
+                            </div>
+                        </div>
+                        <div id="discount-umum-preview" style="margin-top:15px; padding:15px; border-radius:8px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2);">
+                            <small style="color:var(--text-muted);">Preview: Beli Rp 100.000</small>
+                            <div style="font-size:1.2em; font-weight:700; color:#f59e0b; margin-top:5px;">Bayar: Rp 100.000 <span style="font-size:0.7em; color:var(--success);">(hemat Rp 0)</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; display:flex; gap:15px; align-items:center;">
+                    <button id="btn-save-discount" class="btn-primary" style="width:auto; padding:12px 40px; font-size:1em;">
+                        💾 Simpan Pengaturan Diskon
+                    </button>
+                    <span id="discount-save-status" style="color:var(--success); font-size:0.9em;"></span>
+                </div>
+
+                <div class="glass-panel" style="padding:20px; margin-top:25px; border-left:4px solid var(--primary);">
+                    <h4 style="margin-bottom:10px; color:var(--primary);">ℹ️ Cara Kerja Diskon</h4>
+                    <ul style="padding-left:20px; color:var(--text-muted); line-height:1.8;">
+                        <li><strong>Pelanggan Terdaftar:</strong> Diskon otomatis diterapkan saat kasir memilih pelanggan di POS.</li>
+                        <li><strong>Pelanggan Umum:</strong> Diskon diterapkan saat kasir tidak memilih pelanggan (umum).</li>
+                        <li>Diskon dihitung dari <strong>total belanja</strong> (sebelum pembayaran).</li>
+                        <li>Diskon <strong>0%</strong> berarti tidak ada potongan (harga normal).</li>
+                        <li>Perubahan diskon berlaku <strong>langsung</strong> untuk transaksi berikutnya.</li>
+                    </ul>
+                </div>
+            </section>
+
             <div id="page-staff" class="page" style="display: none;">
                 <div class="page-header" style="flex-direction: column; align-items: flex-start; gap: 20px;">
                     <div>
@@ -740,7 +818,7 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts dipanggil dari bawah agar DOM Load duluan -->
-    <script src="app.js?v=147"></script>
+    <script src="app.js?v=148"></script>
 
     <!-- Mobile Sidebar Toggle -->
     <script>
