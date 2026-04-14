@@ -431,24 +431,24 @@ switch ($action) {
 
     case 'get_product_history':
         $pid = $_GET['id'];
-        // Ambil dari product_history DAN stok_masuk digabung
-        // tgl_sistem = kapan diinput, tgl_fisik = kapan beras datang
-        $sql = "(SELECT h.created_at as tgl_sistem, h.tanggal_fisik as tgl_fisik, u.username as petugas, h.action_type as tipe, h.details as detail 
-                 FROM product_history h 
-                 LEFT JOIN users u ON h.user_id = u.id 
-                 WHERE h.product_id = ?)
-                UNION ALL
-                (SELECT s.tanggal_masuk as tgl_sistem, s.tanggal_masuk as tgl_fisik, u.username as petugas, 'STOK_IN' as tipe, 
-                 CONCAT('Masuk ', s.jumlah_sak, ' Sak @', s.kg_per_sak, 'kg (Total: ', s.total_kg, 'kg)') as detail
-                 FROM stok_masuk s
-                 LEFT JOIN users u ON s.user_id = u.id
-                 WHERE s.product_id = ?)
-                 LEFT JOIN users u ON s.user_id = u.id
-                 WHERE s.product_id = ?)
-                ORDER BY tgl_sistem DESC";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$pid, $pid]);
-        echo json_encode(['status' => 'success', 'history' => $stmt->fetchAll()]);
+        try {
+            $sql = "(SELECT h.created_at as tgl_sistem, h.tanggal_fisik as tgl_fisik, u.username as petugas, h.action_type as tipe, h.details as detail 
+                     FROM product_history h 
+                     LEFT JOIN users u ON h.user_id = u.id 
+                     WHERE h.product_id = ?)
+                    UNION ALL
+                    (SELECT s.tanggal_masuk as tgl_sistem, s.tanggal_masuk as tgl_fisik, u.username as petugas, 'STOK_IN' as tipe, 
+                     CONCAT('Masuk ', s.jumlah_sak, ' Sak @', s.kg_per_sak, 'kg (Total: ', s.total_kg, 'kg)') as detail
+                     FROM stok_masuk s
+                     LEFT JOIN users u ON s.user_id = u.id
+                     WHERE s.product_id = ?)
+                    ORDER BY tgl_sistem DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$pid, $pid]);
+            echo json_encode(['status' => 'success', 'history' => $stmt->fetchAll()]);
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
         break;
 
     case 'save_customer':
@@ -470,8 +470,21 @@ switch ($action) {
     case 'delete_customer':
         $data = json_decode(file_get_contents("php://input"), true);
         $id = $data['id'];
-        $pdo->prepare("DELETE FROM customers WHERE id = ?")->execute([$id]);
-        echo json_encode(["status" => "success"]);
+        try {
+            $pdo->beginTransaction();
+            $pdo->prepare("DELETE FROM customers WHERE id = ?")->execute([$id]);
+            
+            // Renumber IDs agar berurutan mulai dari 1
+            $pdo->exec("SET @count = 0");
+            $pdo->exec("UPDATE customers SET id = (@count := @count + 1) ORDER BY id");
+            $pdo->exec("ALTER TABLE customers AUTO_INCREMENT = 1");
+            
+            $pdo->commit();
+            echo json_encode(["status" => "success"]);
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        }
         break;
 
     case 'process_debt_payment':
@@ -570,22 +583,75 @@ switch ($action) {
         $new_payment = $data['payment_type'];
 
         try {
-            // Ambil data lama untuk kalkulasi harga proporsional (opsional, tapi bagus agar total_price tetap masuk akal)
+            $pdo->beginTransaction();
+
+            // Ambil data transaksi lama
             $stmt = $pdo->prepare("SELECT * FROM transactions WHERE id = ?");
             $stmt->execute([$id]);
             $old = $stmt->fetch();
             if (!$old) throw new Exception("Transaksi tidak ditemukan");
 
+            $old_qty = floatval($old['qty']);
+            $qty_diff = $new_qty - $old_qty; // positif = tambah jual, negatif = kurangi jual
+
             $price_per_unit = $old['total_price'] / $old['qty'];
             $new_total_price = $price_per_unit * $new_qty;
-            $new_total_kg = ($old['unit'] === 'sak') ? ($old['kg_per_sak'] * $new_qty) : $new_qty;
+            $new_total_kg = ($old['unit'] === 'sak') ? (floatval($old['kg_per_sak']) * $new_qty) : $new_qty;
 
-            // Update HANYA record transaksi saja tanpa menyentuh stok atau hutang pelanggan
+            // Sinkronisasi Stok: jika qty berubah, sesuaikan stok
+            if ($qty_diff != 0) {
+                if ($old['unit'] === 'sak' && $old['variant_id']) {
+                    // Validasi stok cukup jika qty bertambah
+                    if ($qty_diff > 0) {
+                        $stmtChk = $pdo->prepare("SELECT stok_sak FROM sak_pricing WHERE id = ?");
+                        $stmtChk->execute([$old['variant_id']]);
+                        $currentStock = floatval($stmtChk->fetchColumn());
+                        if ($currentStock < $qty_diff) {
+                            throw new Exception("Stok Sak tidak cukup! Sisa: " . $currentStock . " Sak");
+                        }
+                    }
+                    // Potong/tambah stok sak (qty_diff positif = kurangi stok, negatif = tambah stok)
+                    $stmtStock = $pdo->prepare("UPDATE sak_pricing SET stok_sak = stok_sak - ? WHERE id = ?");
+                    $stmtStock->execute([$qty_diff, $old['variant_id']]);
+                } else {
+                    // Unit KG
+                    if ($qty_diff > 0) {
+                        $stmtChk = $pdo->prepare("SELECT stok_kg FROM products WHERE id = ?");
+                        $stmtChk->execute([$old['product_id']]);
+                        $currentStock = floatval($stmtChk->fetchColumn());
+                        if ($currentStock < $qty_diff) {
+                            throw new Exception("Stok KG tidak cukup! Sisa: " . $currentStock . " Kg");
+                        }
+                    }
+                    $stmtStock = $pdo->prepare("UPDATE products SET stok_kg = stok_kg - ? WHERE id = ?");
+                    $stmtStock->execute([$qty_diff, $old['product_id']]);
+                }
+            }
+
+            // Sinkronisasi Hutang: jika tipe pembayaran berubah
+            if ($old['payment_type'] !== $new_payment && $old['customer_id']) {
+                if ($old['payment_type'] === 'hutang' && $new_payment === 'lunas') {
+                    // Dari hutang ke lunas: kurangi hutang pelanggan
+                    $pdo->prepare("UPDATE customers SET hutang = hutang - ? WHERE id = ?")->execute([$old['total_price'], $old['customer_id']]);
+                } else if ($old['payment_type'] === 'lunas' && $new_payment === 'hutang') {
+                    // Dari lunas ke hutang: tambah hutang pelanggan
+                    $pdo->prepare("UPDATE customers SET hutang = hutang + ? WHERE id = ?")->execute([$new_total_price, $old['customer_id']]);
+                }
+            }
+            // Jika tetap hutang tapi qty berubah
+            if ($old['payment_type'] === 'hutang' && $new_payment === 'hutang' && $qty_diff != 0 && $old['customer_id']) {
+                $price_diff = $new_total_price - floatval($old['total_price']);
+                $pdo->prepare("UPDATE customers SET hutang = hutang + ? WHERE id = ?")->execute([$price_diff, $old['customer_id']]);
+            }
+
+            // Update record transaksi
             $stmtUpd = $pdo->prepare("UPDATE transactions SET qty = ?, total_kg_keluar = ?, total_price = ?, payment_type = ? WHERE id = ?");
             $stmtUpd->execute([$new_qty, $new_total_kg, $new_total_price, $new_payment, $id]);
 
+            $pdo->commit();
             echo json_encode(["status" => "success"]);
         } catch (Exception $e) {
+            $pdo->rollBack();
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
         }
         break;

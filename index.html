@@ -588,7 +588,7 @@
             </div>
             <div class="input-group">
                 <label>No Handphone</label>
-                <input type="text" id="modal-customer-phone" placeholder="0812...">
+                <input type="tel" id="modal-customer-phone" placeholder="08xxxxxxxxxx" maxlength="13" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
             <div class="input-row" style="margin-top:20px;">
                 <button id="btn-close-customer-modal" class="btn-danger" style="flex:1;">Batal</button>
@@ -739,7 +739,7 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts dipanggil dari bawah agar DOM Load duluan -->
-    <script src="app.js?v=145"></script>
+    <script src="app.js?v=146"></script>
 
     <!-- Mobile Sidebar Toggle -->
     <script>

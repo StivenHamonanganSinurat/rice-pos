@@ -794,7 +794,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const searchTerm = (customerSearchInput?.value || "").toLowerCase();
 
         customersList.forEach(c => {
-            if (searchTerm && !c.nama.toLowerCase().includes(searchTerm) && !c.hp.toLowerCase().includes(searchTerm)) {
+            const hp = c.hp || '';
+            if (searchTerm && !c.nama.toLowerCase().includes(searchTerm) && !hp.toLowerCase().includes(searchTerm)) {
                 return;
             }
 
@@ -802,7 +803,7 @@ document.addEventListener("DOMContentLoaded", () => {
             tr.innerHTML = `
                 <td>${c.id}</td>
                 <td><strong>${c.nama}</strong></td>
-                <td>${c.no_hp}</td>
+                <td>${hp || '-'}</td>
                 <td style="color: ${c.hutang > 0 ? 'var(--danger)' : 'var(--success)'}; font-weight: bold; font-size: 1.1em;">
                     ${formatRp(c.hutang)}
                 </td>
@@ -1352,7 +1353,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("modal-customer-title").innerText = "Edit Pelanggan";
             document.getElementById("modal-customer-id").value = customer.id;
             document.getElementById("modal-customer-nama").value = customer.nama;
-            document.getElementById("modal-customer-phone").value = customer.no_hp;
+            document.getElementById("modal-customer-phone").value = customer.hp || '';
         } else {
             document.getElementById("modal-customer-title").innerText = "Tambah Pelanggan Baru";
             document.getElementById("modal-customer-id").value = "";
@@ -1368,9 +1369,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-save-customer").addEventListener("click", () => {
         const id = document.getElementById("modal-customer-id").value;
         const nama = document.getElementById("modal-customer-nama").value;
-        const no_hp = document.getElementById("modal-customer-phone").value;
+        const no_hp = document.getElementById("modal-customer-phone").value.trim();
  
         if(!nama) return showToast("Nama wajib diisi!", "error");
+
+        // Validasi Nomor HP: harus angka, dimulai 08, max 13 digit
+        if(no_hp) {
+            if(!/^08\d{8,11}$/.test(no_hp)) {
+                return showToast("No HP harus diawali 08 dan berisi 10-13 angka!", "error");
+            }
+        }
  
         fetch(API_URL + 'save_customer', {
             method: 'POST',
