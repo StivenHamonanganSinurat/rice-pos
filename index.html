@@ -96,6 +96,9 @@
             </div>
         </aside>
 
+        <!-- SIDEBAR OVERLAY (untuk mobile) -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
         <!-- MAIN KONTEN -->
         <main class="content">
             
@@ -736,6 +739,36 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts dipanggil dari bawah agar DOM Load duluan -->
-    <script src="app.js?v=144"></script>
+    <script src="app.js?v=145"></script>
+
+    <!-- Mobile Sidebar Toggle -->
+    <script>
+    (function() {
+        const sidebar = document.getElementById('main-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const btnOpen = document.getElementById('btn-toggle-sidebar');
+        const btnClose = document.getElementById('btn-close-sidebar');
+        
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+        
+        if(btnOpen) btnOpen.addEventListener('click', openSidebar);
+        if(btnClose) btnClose.addEventListener('click', closeSidebar);
+        if(overlay) overlay.addEventListener('click', closeSidebar);
+        
+        // Tutup sidebar saat menu diklik (mobile)
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if(window.innerWidth <= 768) closeSidebar();
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
