@@ -32,6 +32,7 @@ try {
     addColumn($pdo, 'sak_pricing', 'harga_beli_sak', 'DECIMAL(15,2) DEFAULT 0');
 
     // 4. Perbaikan Tabel transactions
+    addColumn($pdo, 'transactions', 'variant_id', 'INT DEFAULT NULL');
     addColumn($pdo, 'transactions', 'modal_per_item', 'DECIMAL(15,2) DEFAULT 0');
     addColumn($pdo, 'transactions', 'laba', 'DECIMAL(15,2) DEFAULT 0');
 
