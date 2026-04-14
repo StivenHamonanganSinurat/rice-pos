@@ -451,10 +451,10 @@ switch ($action) {
         $no_hp = $data['no_hp'];
 
         if($id) {
-            $stmt = $pdo->prepare("UPDATE customers SET nama = ?, no_hp = ? WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE customers SET nama = ?, hp = ? WHERE id = ?");
             $stmt->execute([$nama, $no_hp, $id]);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO customers (nama, no_hp, hutang) VALUES (?, ?, 0)");
+            $stmt = $pdo->prepare("INSERT INTO customers (nama, hp, hutang) VALUES (?, ?, 0)");
             $stmt->execute([$nama, $no_hp]);
         }
         echo json_encode(["status" => "success"]);
