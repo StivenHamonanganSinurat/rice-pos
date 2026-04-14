@@ -194,11 +194,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 lblError.innerText = "";
                 checkAuth();
             } else {
-                lblError.innerText = "Username atau password salah!";
+                lblError.innerText = data.message || "Gagal login!";
             }
         })
         .catch(err => {
-            lblError.innerText = "Koneksi ke server gagal. Pastikan XAMPP menyala!";
+            console.error("Login Error:", err);
+            lblError.innerText = "Error Sistem: " + err.message;
         });
     }
 
@@ -1637,7 +1638,6 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 showToast("Gagal: " + data.message, "error");
             }
-        });
         });
     });
 

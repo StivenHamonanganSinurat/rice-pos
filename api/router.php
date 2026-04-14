@@ -9,6 +9,15 @@ require_once 'config.php';
 
 // AUTO FIX DATABASE (FINAL CLEANUP)
 try {
+    // 1. Pastikan tabel users ada
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `users` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `username` VARCHAR(50) NOT NULL UNIQUE,
+        `password` VARCHAR(255) NOT NULL,
+        `akses_level` VARCHAR(50) DEFAULT 'kasir',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
     $res = $pdo->query("DESCRIBE `users`")->fetchAll(PDO::FETCH_COLUMN);
     
     // Hapus kolom 'role' lama jika masih ada
@@ -21,7 +30,16 @@ try {
         $pdo->exec("ALTER TABLE `users` ADD COLUMN `akses_level` VARCHAR(50) DEFAULT 'kasir'");
     }
 
-    // Pastikan data penting terisi
+    // 2. Insert User Default jika kosong
+    $stmtCount = $pdo->query("SELECT COUNT(*) FROM users");
+    if ($stmtCount->fetchColumn() == 0) {
+        $pdo->exec("INSERT INTO `users` (`username`, `password`, `akses_level`) VALUES 
+            ('admin', 'admin', 'superadmin'),
+            ('gudang', 'gudang', 'gudang'),
+            ('kasir', 'kasir', 'kasir')");
+    }
+
+    // Update level jika username spesifik belum ada levelnya
     $pdo->exec("UPDATE `users` SET `akses_level` = 'gudang' WHERE `username` = 'gudang' AND (`akses_level` IS NULL OR `akses_level` = '')");
     $pdo->exec("UPDATE `users` SET `akses_level` = 'superadmin' WHERE `username` = 'admin' AND (`akses_level` IS NULL OR `akses_level` = '')");
     
